@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    [Header("Variables del personaje")]
     public float longIdleTime = 5f;
     public float speed = 2.5f;
     public float jumpforce = 2.5f;
     public float extra = 5f;
 
-    
+    [Header("Checkers")]
     private Rigidbody2D _rigidbody2D;
     private CapsuleCollider2D _boxcollider2d;
     private Animator _animator;
@@ -40,10 +41,27 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
         float horizontal = Input.GetAxisRaw("Horizontal");
+
+        if (horizontal < 0f && derecha == true)
+        {
+            _animator.SetBool("Caminando", true);
+            Flip();
+        }
+        else if (horizontal > 0f && derecha == false)
+        {
+            Flip();
+            _animator.SetBool("Caminando", true);
+        }
+        else {
+            _animator.SetBool("Caminando", horizontal != 0 ? true : false);
+        }
+        
         _movimiento = new Vector2(horizontal, 0f);
         float horizontalVel = _movimiento.normalized.x * speed;
         _rigidbody2D.velocity = new Vector2(horizontalVel, _rigidbody2D.velocity.y);
-        //seteo el movimiento.
+
+
+        //seteo el movimiento
         _rigidbody2D.AddForce(_movimiento);
         //hago q se mueva.
 
@@ -51,6 +69,7 @@ public class PlayerController : MonoBehaviour
 
         bool grounded = Suelo();
         if (Input.GetButton("Jump") && grounded){
+            _animator.SetBool("NotGrounded", true);
             Jump();
         }
     }
@@ -59,10 +78,12 @@ public class PlayerController : MonoBehaviour
         Color raycolor;
         if (raycast.collider != null)
         {
+            _animator.SetBool("NotGrounded", false);
             Debug.Log(raycast.collider != null);
             raycolor = Color.green;
         }
         else {
+            _animator.SetBool("NotGrounded", true);
             raycolor = Color.red;
         }
         Debug.DrawRay(_boxcollider2d.bounds.center, Vector2.down * (_boxcollider2d.bounds.extents.y + extra), raycolor);
@@ -80,6 +101,10 @@ public class PlayerController : MonoBehaviour
 
     private void Flip()
     {
+        derecha = !derecha;
+        float localScaleX = transform.localScale.x;
+        localScaleX = localScaleX * -1f;
+        transform.localScale = new Vector3(localScaleX, transform.localScale.y, transform.localScale.z);
     }
     private void OnDrawGizmos()
     {
